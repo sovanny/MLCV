@@ -20,6 +20,7 @@ g++ facedetect_new.cpp -o facedetect_new -I /usr/local/include -L /usr/local/lib
 g++ letter_recog_new.cpp -o letter_recog_new -I/usr/local/include -L/usr/local/lib -lopencv_core -lopencv_ml
 ```
 ## Instructions
+If at any time you want to re-calibrate your face during facedetect_new, press "r"
 ### Predict sign using the existing model
 Note: This probably wont work since the lighting and our skin tones are different.
 1. Start ```./facedetect_new ```

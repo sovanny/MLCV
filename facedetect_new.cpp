@@ -15,7 +15,7 @@ using namespace cv;
 using namespace cv::ml;
 
 //global variables is bad practice..
-//but I think it's worse practise to declare them every loop
+//but I think it's even worse practise to declare them every loop
 int trackObject = -1;
 bool backprojMode = false;
 int hsize = 16;
@@ -28,10 +28,13 @@ int letterCount = 30;
 //original (slighty trimmed) detectAndDraw function
 void detectAndDraw(Mat &img, CascadeClassifier &cascade, Rect &face);
 
+// to exctract part of the camshift code
 void camshiftPrep();
 
+// main camshift function
 void myCamshift(Rect &face, Mat &frame, Rect &trackWindow);
 
+//code to load classifier
 template<typename T>
 static Ptr<T> load_classifier(const string& filename_to_load)
 {
@@ -41,7 +44,6 @@ static Ptr<T> load_classifier(const string& filename_to_load)
         cout << "Could not read the classifier " << filename_to_load << endl;
     else
         cout << "The classifier " << filename_to_load << " is loaded.\n";
-
     return model;
 }
 
@@ -75,8 +77,8 @@ int main(int argc, const char **argv)
             if (frame.empty())
                 break;
 
-            if (face.empty())
-            {   //DETECTION FUNCTION. It will send back a list of faces. we'll use the first one
+            if (face.empty()) //if a face hasn't been detected
+            {   //DETECTION FUNCTION. 
                 detectAndDraw(frame, cascade, face);
             }
             else
@@ -98,9 +100,9 @@ void myCamshift(Rect &selection, Mat &image, Rect &trackWindow)
     Mat backproj;
     cvtColor(image, hsv, COLOR_BGR2HSV);
 
-    camshiftPrep();
+    camshiftPrep(); //to portion out some of the code
 
-    if( trackObject < 0 )
+    if( trackObject < 0 ) //this happens ONCE
     { // Object has been selected by detectAndDraw, set up CAMShift search properties once
         Mat roi(hue, selection), maskroi(mask, selection);
         calcHist(&roi, 1, 0, maskroi, hist, 1, &hsize, &phranges);
@@ -118,59 +120,54 @@ void myCamshift(Rect &selection, Mat &image, Rect &trackWindow)
     RotatedRect rFaceBox = CamShift(backproj, trackWindow,
                                     TermCriteria(TermCriteria::EPS | TermCriteria::COUNT, 10, 1));
 
-    int cols = backproj.cols, rows = backproj.rows;
+    // backproj: make pixels inside facebox area zero
     backproj(trackWindow).setTo(0);
+
+    int cols = backproj.cols, rows = backproj.rows;
     //new trackwindow that is the whole frame
     Rect newTrackWindow = Rect(0, 0, cols, rows);
+    //make the trackwindow a little bit bigger, for the next iteration
     if( trackWindow.area() <= 1 )
     {
         int r = (MIN(cols, rows) + 5)/6;
         trackWindow = Rect(trackWindow.x - r, trackWindow.y - r,
                            trackWindow.x + r, trackWindow.y + r) &
                       newTrackWindow;
-    }
+    }  
 
-    // backproj: make pixels inside facebox area zero
-
-
-    //Do CAMSHIFT again
+    //Do CAMSHIFT again, to detect hand when the face is blocked out
     RotatedRect rHandBox = CamShift(backproj, newTrackWindow,
                                     TermCriteria(TermCriteria::EPS | TermCriteria::COUNT, 10, 1));
-    Rect handBox = rHandBox.boundingRect();
-    handBox = handBox & newTrackWindow;
+    Rect handBox = rHandBox.boundingRect(); //get it in the right format
+    handBox = handBox & newTrackWindow; //to avoid out of bounds errors
 
-    rectangle(image, handBox, Scalar(0, 255, 0), 3, LINE_AA);
-
-    //ellipse( image, rFaceBox, Scalar(0,0,255), 3, LINE_AA );
+    rectangle(image, handBox, Scalar(0, 255, 0), 3, LINE_AA); //draw rectangle
 
     imshow( "detection", image );
-
     cvtColor( backproj, image, COLOR_GRAY2BGR );
     imshow( "backproj", image );
 
     char c = (char)waitKey(10);
     switch(c)
     {
-      case 'x':{
+      case 'x':{ //capture hands for training
 
         Mat hand = backproj(handBox);
         resize(hand, hand, Size(16,16), 0, 0, INTER_LINEAR);
         Mat img2 = hand.reshape(0,1);
         std::ofstream os ("letter_new.txt", ios::out | ios::app);
-
-        //this is where the MLP model and prediction
         os << "Y,";
         os << format(img2, Formatter::FMT_CSV ) << endl;
         os.close();
         //imwrite("Letter_Y_" + std::to_string(letterCount) + ".jpg", image(handBox));
         letterCount--;
         break;}
-      case 'p':{
+      case 'p':{ //predict hand sign using trained model
           Mat hand = backproj(handBox);
           resize(hand, hand, Size(16,16), 0, 0, INTER_LINEAR);
           Mat img2 = hand.reshape(0,1);
           Ptr<ANN_MLP> model = load_classifier<ANN_MLP>("backup_network");
-          img2.convertTo(img2, CV_32F);
+          img2.convertTo(img2, CV_32F); //added this line to make it work
           float r = model->predict(img2);
           r = r + (int)('A');
           cout << (char)r << endl;
@@ -192,8 +189,6 @@ void camshiftPrep()
     hue.create(hsv.size(), hsv.depth());
     mixChannels(&hsv, 1, &hue, 1, ch, 1);
 }
-
-
 
 void detectAndDraw(Mat &img, CascadeClassifier &cascade, Rect &face) //add faces for better speed
 {

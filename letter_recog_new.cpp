@@ -88,9 +88,7 @@ static void test_and_save_classifier(const Ptr<StatModel>& model,
     {
         Mat sample = data.row(i);
         cout << sample<< endl;
-        // sample = the resize of you hand. a Mat. (called img2 I think)
-        // this two lines are needed for the predicition in facedetect.
-        //convert to char
+        
         float r = model->predict( sample );
         r = std::abs(r + rdelta - responses.at<int>(i)) <= FLT_EPSILON ? 1.f : 0.f;
 
@@ -207,9 +205,8 @@ int main( int argc, char *argv[] )
     string filename_to_save = "backup_network";
     string filename_to_load = "";
     string data_filename = "letter.txt";
-    int method = 2; // use MLP
 
-    build_mlp_classifier( data_filename, filename_to_save, filename_to_load );
+    build_mlp_classifier( data_filename, filename_to_save, filename_to_load );  // use MLP
 
     return 0;
 }
