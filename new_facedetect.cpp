@@ -16,8 +16,7 @@ bool showHist = true;
 Mat image;
 
 //original (slighty trimmed) detectAndDraw function
-void detectAndDraw(Mat &img, CascadeClassifier &cascade,
-                   double scale, vector<Rect> &faces);
+void detectAndDraw(Mat &img, CascadeClassifier &cascade, vector<Rect> &faces);
 
 //the modified camshift function
 int myCamShift(Rect &face, Mat &frame);
@@ -27,8 +26,9 @@ int main(int argc, const char **argv)
     VideoCapture capture;
     Mat frame;
     CascadeClassifier cascade;
-    double scale = 1;
     string cascadeName = "/home/user/src/opencv-3.3.0/data/haarcascades/haarcascade_frontalface_alt.xml";
+    //add this for speed
+    vector<Rect> faces;
 
     if (!cascade.load(cascadeName))
     {
@@ -40,9 +40,6 @@ int main(int argc, const char **argv)
 
     if (!capture.open(0))
         cout << "Capture from camera didn't work" << endl;
-
-    //add this for speed
-    vector<Rect> faces;
 
     // if camera successfully opened
     if (capture.isOpened())
@@ -62,7 +59,7 @@ int main(int argc, const char **argv)
             if (faces.empty())
             {
                 //DETECTION FUNCTION
-                detectAndDraw(frame1, cascade, scale,faces);
+                detectAndDraw(frame1, cascade,faces);
             }
             else
             {
@@ -234,7 +231,7 @@ int myCamShift(Rect &face, Mat &frame)
     }
 }
 
-void detectAndDraw(Mat &img, CascadeClassifier &cascade, double scale, vector<Rect> &faces) //add faces for better speed
+void detectAndDraw(Mat &img, CascadeClassifier &cascade, vector<Rect> &faces) //add faces for better speed
 {
     // in xml we have a list of patterns, thresholds and their confidence values
     double t = 0;
@@ -252,7 +249,7 @@ void detectAndDraw(Mat &img, CascadeClassifier &cascade, double scale, vector<Re
     Mat gray, smallImg;
     //convert color
     cvtColor(img, gray, COLOR_BGR2GRAY);
-    double fx = 1 / scale;
+    double fx = 1;
     // make image smaller with a linear interpolation
     resize(gray, smallImg, Size(), fx, fx, INTER_LINEAR);
     //
@@ -282,14 +279,14 @@ void detectAndDraw(Mat &img, CascadeClassifier &cascade, double scale, vector<Re
         double aspect_ratio = (double)r.width / r.height;
         if (0.75 < aspect_ratio && aspect_ratio < 1.3)
         {
-            center.x = cvRound((r.x + r.width * 0.5) * scale);
-            center.y = cvRound((r.y + r.height * 0.5) * scale);
-            radius = cvRound((r.width + r.height) * 0.25 * scale);
+            center.x = cvRound((r.x + r.width * 0.5));
+            center.y = cvRound((r.y + r.height * 0.5));
+            radius = cvRound((r.width + r.height) * 0.25);
             circle(img, center, radius, color, 3, 8, 0);
         }
         else
-            rectangle(img, cvPoint(cvRound(r.x * scale), cvRound(r.y * scale)),
-                      cvPoint(cvRound((r.x + r.width - 1) * scale), cvRound((r.y + r.height - 1) * scale)),
+            rectangle(img, cvPoint(cvRound(r.x), cvRound(r.y)),
+                      cvPoint(cvRound(r.x + r.width - 1), cvRound(r.y + r.height - 1)),
                       color, 3, 8, 0);
     }
     imwrite("result.jpg", img);
