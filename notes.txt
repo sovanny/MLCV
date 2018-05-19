@@ -1,0 +1,24 @@
+g++ facedetect.cpp -o facedetect -I /usr/local/include -L /usr/local/lib -lopencv_objdetect -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio -lopencv_imgproc
+
+To compile, with all the libraries
+
+g++ camshiftdemo.cpp -o camshiftdemo -I/usr/local/include -L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_videoio -lopencv_video
+
+
+---- new ----
+
+
+g++ new_facedetect.cpp -o new_facedetect -I /usr/local/include -L /usr/local/lib -lopencv_objdetect -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio -lopencv_imgproc -lopencv_imgproc -lopencv_video
+
+
+-----
+
+replace all spaces by nothing
+get several C's and A's maybe
+then use line shuffler
+
+
+-> 16 -> 256
+-> size of network 100, 100 -> 10, 
+
+provide a README with the code
