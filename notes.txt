@@ -24,3 +24,13 @@ then use line shuffler
 provide a README with the code
 
 pns
+
+------
+g++ new_new_facedetect.cpp -o new_new_facedetect -I /usr/local/include -L /usr/local/lib -lopencv_objdetect -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio -lopencv_imgproc -lopencv_imgproc -lopencv_video
+
+g++ modified_camshift.cpp -o mod_camshift -I/usr/local/include -L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_videoio -lopencv_video
+
+g++ letter_recog.cpp -o letter_recog -I/usr/local/include -L/usr/local/lib -lopencv_core -lopencv_ml
+
+
+

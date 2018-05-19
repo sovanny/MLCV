@@ -15,6 +15,7 @@ using namespace cv;
 bool showHist = true;
 Mat image;
 
+
 //original (slighty trimmed) detectAndDraw function
 void detectAndDraw(Mat &img, CascadeClassifier &cascade, vector<Rect> &faces);
 
@@ -53,17 +54,15 @@ int main(int argc, const char **argv)
             capture >> frame;
             if (frame.empty())
                 break;
-            //copy frame
-            Mat frame1 = frame.clone();
+
 
             if (faces.empty())
-            {
-                //DETECTION FUNCTION
-                detectAndDraw(frame1, cascade,faces);
+            {   //DETECTION FUNCTION
+                detectAndDraw(frame, cascade,faces);
             }
             else
-            {
-                myCamShift(faces[0], frame1);
+            {   //Camshift and hand detection
+                myCamShift(faces[0], frame);
             }
 
             char c = (char)waitKey(10);
@@ -81,6 +80,8 @@ return 0;
 int myCamShift(Rect &face, Mat &frame)
 {
     int trackObject = -1;
+
+    imshow("face.jpg", frame(face));
 
     int hsize = 16;
     float hranges[] = {0, 180};
@@ -164,20 +165,12 @@ int myCamShift(Rect &face, Mat &frame)
     // backproj: make pixels inside trackbox area zero
     backproj(faceBox).setTo(0);
 
-
-
-    //do the above fucniton again RotatetedRect handBox = Camshift(Backproj[changed], newTrackwindow, )
-    RotatedRect rHandBox = CamShift(backproj, newTrackWindow,
+    //Do CAMSHIFT again
+   RotatedRect rHandBox = CamShift(backproj, newTrackWindow,
                                     TermCriteria(TermCriteria::EPS | TermCriteria::COUNT, 10, 1));
     Rect handBox = rHandBox.boundingRect();
+    handBox = handBox & newTrackWindow;
     //then rotate the new rotatedrect again to -> Rect
-    if (trackWindow.area() <= 1)
-    {
-        int cols = backproj.cols, rows = backproj.rows, r = (MIN(cols, rows) + 5) / 6;
-        trackWindow = Rect(trackWindow.x - r, trackWindow.y - r,
-                           trackWindow.x + r, trackWindow.y + r) &
-                      Rect(0, 0, cols, rows);
-    }
 
     ellipse(image, rHandBox, Scalar(0, 0, 255), 3, LINE_AA);
 
@@ -185,7 +178,7 @@ int myCamShift(Rect &face, Mat &frame)
 
     Rect bigHandBox = Rect(handBox.x + 20, handBox.y +20, handBox.width, handBox.height);
     bigHandBox = bigHandBox & newTrackWindow;
-    handBox = handBox & newTrackWindow;
+
 
     imshow("Backproj", backproj);
     imshow("CamShift", image);
